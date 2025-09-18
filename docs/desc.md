@@ -26,8 +26,8 @@
 
 - Queries to demonstrate:
 
-- “No-show rate by therapist/month” (GROUP BY).
+    - “No-show rate by therapist/month” (GROUP BY).
 
-- “Change in outcome score from baseline” (self-join or window).
+    - “Change in outcome score from baseline” (self-join or window).
 
-- “Top 5 most-prescribed exercises for shoulder” (aggregate + filter).
+    - “Top 5 most-prescribed exercises for shoulder” (aggregate + filter).
