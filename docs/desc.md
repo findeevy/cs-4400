@@ -31,3 +31,25 @@
     - “Change in outcome score from baseline” (self-join or window).
 
     - “Top 5 most-prescribed exercises for shoulder” (aggregate + filter).
+
+*Assumptions*
+
+1. General Data
+- Each patient can have multiple referrals, each linked to one diagnosis and provider.
+- Sessions are independent of referrals.
+- Dates follow `YYYY-MM-DD` format.
+- Multiple outcome scores per patient and measure are expected.
+
+2. Sessions & Scheduling
+- `Status` values include: `'Scheduled'`, `'Completed'`, `'Cancelled'`, `'No-show'`, `'Rescheduled'`.
+- Rescheduled sessions are recorded as new rows; original marked `'Rescheduled'`.
+- Pain scores are recorded on a 0–10 scale.
+3. Exercise Tracking
+- Exercises are only recorded if performed during a session.
+- Resistance can be numeric (e.g., `5`) or descriptive (e.g., `"Red band"`).
+- Each session may include multiple exercises.
+
+4. Outcome Measures
+- Standardized `MeasureName` values (e.g., `'DASH'`, `'LEFS'`).
+- Multiple scores can exist for the same measure/patient.
+- Interpretation (higher/lower is better) is handled in reporting.
