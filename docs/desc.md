@@ -44,6 +44,7 @@
 - `Status` values include: `'Scheduled'`, `'Completed'`, `'Cancelled'`, `'No-show'`, `'Rescheduled'`.
 - Rescheduled sessions are recorded as new rows; original marked `'Rescheduled'`.
 - Pain scores are recorded on a 0–10 scale.
+
 3. Exercise Tracking
 - Exercises are only recorded if performed during a session.
 - Resistance can be numeric (e.g., `5`) or descriptive (e.g., `"Red band"`).
@@ -53,3 +54,42 @@
 - Standardized `MeasureName` values (e.g., `'DASH'`, `'LEFS'`).
 - Multiple scores can exist for the same measure/patient.
 - Interpretation (higher/lower is better) is handled in reporting.
+
+*Scope of the Project*
+
+In Scope
+- Patient data: demographics, contact information.
+- Referral Data: diagnoses codes, referring provider, referral date.
+- Session Data: therapist, date, status, pain scores, and notes.
+- Exercise Data: exercise name, body region, difficulty level.
+- Session-Exercise Linkage: details of sets, reps, and resistance performed.
+- Outcome measures: score values tied to a patient, measure name, and date recorded.
+
+Out of Scope:
+- Billing, payments, or insurance claims.
+- Therapist payroll, staffing schedules, or time tracking.
+- Inventory of clinic equipment or supply usage.
+- Profit, loss, or other financial reporting.
+
+*Team Assignments*
+
+Zak Gilliam:
+- Table(s)
+    - Exercises
+- Implementation focus: Build and test the *Exercises* table, ensuring standardized attributes.
+- Front end: Lead development of the website interface where the database will be implemented.
+
+Fin Deevy:
+- Table(s)
+    - SessionExercises, OutcomeMeasures
+- Implementation focus: Manage the design and population of outcome measure data, plus the many-to-many link table (SessionExercise) to track prescribed sets, reps, and resistance.
+
+Alexis Herman:
+- Table(s)
+    - Patients, Referrals, and Sessions
+- Implementation focus: Build and test core patient/clinical scheduling tables, ensuring proper foreign key linkage between patients, referrals, and sessions
+
+Shared Work:
+- ER model
+- Relational design with data dictionary
+- Team presentation
