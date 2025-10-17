@@ -3,6 +3,9 @@
 **Goal: Manage referrals, scheduled sessions, exercises prescribed, and progress scores.**
 
 *Tables*:
+- Staff(StaffID, Position, StaffName, Phone, DOB)
+
+- Therapist (Specialty, StaffID, Position, StaffName, Phone, DOB)
 
 - Patients(PatientID PK, Name, DOB, Phone)
 
