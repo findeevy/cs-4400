@@ -17,7 +17,7 @@ CREATE TABLE Patients (
     Name VARCHAR(100) NOT NULL,
     DOB DATE,
     Phone VARCHAR(20)
-) ENGINE=InnoDB;
+);
 
 CREATE TABLE Staff (
     StaffID INT PRIMARY KEY AUTO_INCREMENT,
@@ -25,7 +25,7 @@ CREATE TABLE Staff (
     Position VARCHAR(50) NOT NULL, -- e.g., Therapist, PTA, Admin
     Phone VARCHAR(20),
     DOB DATE
-) ENGINE=InnoDB;
+);
 
 -- Therapist is a strict subtype of Staff; only Specialty lives here.
 CREATE TABLE Therapist (
@@ -35,7 +35,7 @@ CREATE TABLE Therapist (
         FOREIGN KEY (StaffID) REFERENCES Staff(StaffID)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
-) ENGINE=InnoDB;
+);
 
 CREATE TABLE Exercises (
     ExerciseID INT PRIMARY KEY AUTO_INCREMENT,
@@ -43,7 +43,7 @@ CREATE TABLE Exercises (
     BodyRegion VARCHAR(30) NOT NULL,
     Difficulty TINYINT NOT NULL,
     CONSTRAINT chk_ex_difficulty CHECK (Difficulty BETWEEN 1 AND 5)
-) ENGINE=InnoDB;
+);
 
 -- =========================
 -- Clinical events / records
@@ -69,30 +69,24 @@ CREATE TABLE Sessions (
         ON DELETE RESTRICT,
     -- Optional business rule: at most one session per patient per date
     CONSTRAINT uq_patient_sessiondate UNIQUE (PatientID, SessionDate)
-) ENGINE=InnoDB;
+);
 
 CREATE TABLE Referrals (
     ReferralID INT PRIMARY KEY AUTO_INCREMENT,
     PatientID INT NOT NULL,
     DxCode VARCHAR(20) NOT NULL,
     ReferralDate DATE NOT NULL,
-    ReferrerStaffID INT NULL,          -- internal referrer (therapist) optional
     ReferringProvider VARCHAR(100) NULL, -- external name/NPI optional
     CONSTRAINT fk_ref_patient
         FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
-    CONSTRAINT fk_ref_referrer
-        FOREIGN KEY (ReferrerStaffID) REFERENCES Therapist(StaffID)
-        ON UPDATE CASCADE
-        ON DELETE SET NULL,
-    -- Business rule: exactly one of ReferrerStaffID or ReferringProvider is provided
     CONSTRAINT chk_ref_one_source CHECK (
-        (ReferrerStaffID IS NULL) <> (ReferringProvider IS NULL)
+        ReferringProvider IS NULL
     ),
     -- Optional de-dup rule
     INDEX idx_ref_patient_date_dx (PatientID, ReferralDate, DxCode)
-) ENGINE=InnoDB;
+) ;
 
 CREATE TABLE SessionExercises (
     SessionExerciseID INT PRIMARY KEY AUTO_INCREMENT,
@@ -114,7 +108,7 @@ CREATE TABLE SessionExercises (
         ON DELETE RESTRICT,
     -- Avoid duplicate identical prescriptions within a session
     CONSTRAINT uq_se_nodup UNIQUE (SessionID, ExerciseID, Sets, Reps, Resistance)
-) ENGINE=InnoDB;
+) ;
 
 CREATE TABLE OutcomeMeasures (
     OutcomeID INT PRIMARY KEY AUTO_INCREMENT,
@@ -131,7 +125,7 @@ CREATE TABLE OutcomeMeasures (
     -- Prevent duplicate scoring of same instrument on same day
     CONSTRAINT uq_om_unique UNIQUE (PatientID, MeasureName, TakenOn),
     INDEX idx_patient_measure (PatientID, MeasureName)
-) ENGINE=InnoDB;
+);
 
 -- =========================
 -- Seed data (consistent with constraints)
