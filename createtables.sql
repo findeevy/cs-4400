@@ -86,7 +86,7 @@ CREATE TABLE Referrals (
     ),
     -- Optional de-dup rule
     INDEX idx_ref_patient_date_dx (PatientID, ReferralDate, DxCode)
-) ;
+);
 
 CREATE TABLE SessionExercises (
     SessionExerciseID INT PRIMARY KEY AUTO_INCREMENT,
@@ -108,7 +108,7 @@ CREATE TABLE SessionExercises (
         ON DELETE RESTRICT,
     -- Avoid duplicate identical prescriptions within a session
     CONSTRAINT uq_se_nodup UNIQUE (SessionID, ExerciseID, Sets, Reps, Resistance)
-) ;
+);
 
 CREATE TABLE OutcomeMeasures (
     OutcomeID INT PRIMARY KEY AUTO_INCREMENT,
