@@ -95,7 +95,6 @@ CREATE TABLE SessionExercises (
     Sets TINYINT NOT NULL,
     Reps TINYINT NOT NULL,
     Resistance VARCHAR(20),
-    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_sets CHECK (Sets > 0),
     CONSTRAINT chk_reps CHECK (Reps > 0),
     CONSTRAINT fk_se_session
@@ -117,7 +116,6 @@ CREATE TABLE OutcomeMeasures (
     Score DECIMAL(5,2) NOT NULL,
     TakenOn DATE NOT NULL,
     Notes TEXT,
-    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_om_patient
         FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
         ON UPDATE CASCADE
@@ -172,12 +170,12 @@ INSERT INTO Sessions (PatientID, TherapistID, SessionDate, Status, PainPre, Pain
 
 -- Referrals
 -- Use internal referrer when it’s one of the therapists; otherwise use external name.
-INSERT INTO Referrals (PatientID, DxCode, ReferralDate, ReferrerStaffID, ReferringProvider) VALUES
-(1, 'M54.5', '2025-10-01', 1, NULL),                    -- internal by Dr. Lee
-(2, 'G44.1', '2025-10-03', NULL, 'Dr. Rachel Brown'),    -- external
-(3, 'S83.2', '2025-10-05', NULL, 'Dr. Kevin Nguyen'),    -- external (renamed to avoid Staff Admin)
-(4, 'M25.5', '2025-10-07', 5, NULL),                     -- internal by Linda Park
-(5, 'R51',   '2025-10-09', NULL, 'Dr. Harry James');     -- external
+INSERT INTO Referrals (PatientID, DxCode, ReferralDate, ReferringProvider) VALUES
+(1, 'M54.5', '2025-10-01', 'Dr. Kevin Lee'),                    
+(2, 'G44.1', '2025-10-03', 'Dr. Rachel Brown'),    
+(3, 'S83.2', '2025-10-05', 'Dr. Kevin Nguyen'),   
+(4, 'M25.5', '2025-10-07', 'Dr. Lee Blue'),        
+(5, 'R51',   '2025-10-09', 'Dr. Harry James');     
 
 -- SessionExercises
 INSERT INTO SessionExercises (SessionID, ExerciseID, Sets, Reps, Resistance) VALUES
