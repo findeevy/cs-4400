@@ -82,7 +82,7 @@ CREATE TABLE Referrals (
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
     CONSTRAINT chk_ref_one_source CHECK (
-        ReferringProvider IS NULL
+        ReferringProvider IS NOT NULL
     ),
     -- Optional de-dup rule
     INDEX idx_ref_patient_date_dx (PatientID, ReferralDate, DxCode)
