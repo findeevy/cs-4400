@@ -240,3 +240,127 @@ END IF;
 END$$
 
 DELIMITER ;
+
+
+-- Views (at least 2)
+-- 1) PatientSummary: aggregated view per patient
+-- 2) TherapistWorkload: therapist + count of sessions and distinct patients
+-- -------------------------
+CREATE VIEW PatientSummary AS
+SELECT
+p.PatientID,
+p.Name,
+COUNT(s.SessionID) AS NumSessions,
+MAX(s.SessionDate) AS LastSession,
+ROUND(AVG(om.Score),2) AS AvgOutcomeScore
+FROM Patients p
+LEFT JOIN Sessions s ON p.PatientID = s.PatientID
+LEFT JOIN OutcomeMeasures om ON p.PatientID = om.PatientID
+GROUP BY p.PatientID;
+
+CREATE VIEW TherapistWorkload AS
+SELECT
+t.StaffID AS TherapistID,
+st.StaffName,
+t.Specialty,
+COUNT(s.SessionID) AS NumSessions,
+COUNT(DISTINCT s.PatientID) AS NumPatients
+FROM Therapist t
+JOIN Staff st ON t.StaffID = st.StaffID
+LEFT JOIN Sessions s ON t.StaffID = s.TherapistID
+GROUP BY t.StaffID;
+
+-- Procedures and Functions
+-- 1) Procedure: AddSession(IN ... ) - demonstrates input parameters
+-- 2) Function: fn_avg_pain_reduction(patientid) - returns avg PainPre - PainPost
+-- -------------------------
+DELIMITER $$
+CREATE PROCEDURE AddSession(
+IN p_PatientID INT,
+IN p_TherapistID INT,
+IN p_SessionDate DATE,
+IN p_Status VARCHAR(20),
+IN p_PainPre TINYINT,
+IN p_PainPost TINYINT,
+IN p_Notes TEXT
+)
+BEGIN
+-- Simple validation (raise error if therapist is not a valid therapist)
+IF NOT EXISTS (SELECT 1 FROM Therapist WHERE StaffID = p_TherapistID) THEN
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Provided therapist id is not a valid Therapist';
+END IF;
+INSERT INTO Sessions (PatientID, TherapistID, SessionDate, Status, PainPre, PainPost, Notes)
+VALUES (p_PatientID, p_TherapistID, p_SessionDate, p_Status, p_PainPre, p_PainPost, p_Notes);
+END$$
+
+
+CREATE FUNCTION fn_avg_pain_reduction(p_PatientID INT)
+RETURNS DECIMAL(6,2)
+DETERMINISTIC
+BEGIN
+DECLARE v_avg DECIMAL(6,2);
+SELECT IFNULL(AVG(PainPre - PainPost), 0)
+INTO v_avg
+FROM Sessions
+WHERE PatientID = p_PatientID
+AND PainPre IS NOT NULL AND PainPost IS NOT NULL
+AND Status = 'Completed';
+RETURN ROUND(v_avg,2);
+END$$
+DELIMITER ;
+
+-- Five required queries (meeting the constraints)
+-- Query 1: Uses a VIEW. Show patients with average outcome score < 50 (aggregation + view)
+-- Query 2: Join multiple tables and aggregate: number of exercises prescribed per session
+-- Query 3: Uses a view + join: therapists and their workload (aggregate)
+-- Query 4: Uses subquery: patients with at least one outcome score above overall average
+-- Query 5: Join across referrals and patients to list referral details and indicate that all referral sources are external.
+
+-- Query 1: uses view (PatientSummary) and aggregation already done in view
+-- Description: List patients whose average outcome score (across instruments) is below 50
+SELECT * FROM PatientSummary WHERE AvgOutcomeScore IS NOT NULL AND AvgOutcomeScore < 50;
+
+
+-- Query 2: For each session, list the number of distinct exercises prescribed and total sets
+-- Description: Shows exercise counts per session (useful to display session complexity)
+SELECT
+s.SessionID,
+p.Name AS PatientName,
+s.SessionDate,
+COUNT(DISTINCT se.ExerciseID) AS DistinctExercises,
+SUM(se.Sets) AS TotalSets
+FROM Sessions s
+JOIN Patients p ON s.PatientID = p.PatientID
+LEFT JOIN SessionExercises se ON s.SessionID = se.SessionID
+GROUP BY s.SessionID, p.Name, s.SessionDate;
+
+
+-- Query 3: Therapist workload via view join (join + aggregation)
+-- Description: Show therapist name, specialty, number of sessions and distinct patients
+SELECT tw.TherapistID, tw.StaffName, tw.Specialty, tw.NumSessions, tw.NumPatients
+FROM TherapistWorkload tw
+ORDER BY tw.NumSessions DESC;
+
+
+-- Query 4: Subquery example
+-- Description: Return patients who have at least one outcome score above the overall average score
+SELECT DISTINCT p.PatientID, p.Name
+FROM Patients p
+JOIN OutcomeMeasures om ON p.PatientID = om.PatientID
+WHERE om.Score > (
+SELECT AVG(Score) FROM OutcomeMeasures
+);
+
+
+-- Query 5: All Patient Referrals (Most Recent First)
+-- Description: Displays all referrals, including patient name, diagnosis, date, and external referring provider, sorted by most recent.
+SELECT 
+    r.ReferralID,
+    p.Name AS PatientName,
+    r.DxCode,
+    r.ReferralDate,
+    'External' AS SourceType,
+    r.ReferringProvider
+FROM Referrals r
+JOIN Patients p ON r.PatientID = p.PatientID
+ORDER BY r.ReferralDate DESC;
