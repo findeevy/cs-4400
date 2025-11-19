@@ -192,3 +192,51 @@ INSERT INTO OutcomeMeasures (PatientID, MeasureName, Score, TakenOn, Notes) VALU
 (3, 'TUG', 12.30, '2025-10-17', 'Within normal range'),
 (4, 'ODI', 30.00, '2025-10-18', 'Severe pain reported'),
 (5, 'LEFS', 70.00, '2025-10-19', 'Good progress in strength and endurance');
+
+-- Triggers (at least 3)
+-- 1) AFTER INSERT on Sessions: if PainPost is NULL copy PainPre to PainPost (keeps data consistent)
+-- 2) BEFORE INSERT on OutcomeMeasures: validate Score range (0-100)
+-- 3) BEFORE INSERT on SessionExercises: Prevent exercise data from being inputed to a cancelled/no-show sessions
+-- -------------------------
+DELIMITER $$
+
+CREATE TRIGGER trg_sessions_after_insert
+AFTER INSERT ON Sessions
+FOR EACH ROW
+BEGIN
+-- If a completed session has no PainPost recorded, default PainPost to PainPre for consistency
+IF NEW.PainPost IS NULL AND NEW.PainPre IS NOT NULL THEN
+UPDATE Sessions
+SET PainPost = NEW.PainPre
+WHERE SessionID = NEW.SessionID;
+END IF;
+END$$
+
+
+CREATE TRIGGER trg_outcomemeasures_before_insert
+BEFORE INSERT ON OutcomeMeasures
+FOR EACH ROW
+BEGIN
+-- Enforce score range 0 - 100 (extra safety beyond app-level checks)
+IF NEW.Score < 0 OR NEW.Score > 100 THEN
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Score must be between 0 and 100';
+END IF;
+END$$
+
+
+CREATE TRIGGER trg_no_exercises_for_canceled_sessions
+BEFORE INSERT ON SessionExercises
+FOR EACH ROW
+BEGIN
+-- Prevent adding exercises to Canceled or No-Show sessions
+IF (
+SELECT Status
+FROM Sessions
+WHERE SessionID = NEW.SessionID
+) IN ('Canceled', 'No-Show') THEN
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Cannot add exercises to a canceled or no-show session';
+END IF;
+END$$
+
+DELIMITER ;
